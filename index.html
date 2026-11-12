@@ -250,7 +250,7 @@ const active = () => data.filter(r => !r.deleted);
 const kats = () => { const s = new Set(DEFAULT_KAT); active().forEach(r => r.kategori && s.add(r.kategori)); return [...s]; };
 const billKats = () => kats().filter(k => k !== 'Roadtax');
 
-function load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
+function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); return Array.isArray(d) ? d.filter(r => r && r.id != null && typeof r.tarikh === 'string' && r.tarikh) : []; } catch (e) { return []; } }
 let data = load();
 let settings = JSON.parse(localStorage.getItem(SET_KEY) || '{}');
 const state = { view: 'ringkasan', bilFilter: 'Semua', year: new Date().getFullYear() };
@@ -290,7 +290,7 @@ const statCard = (name, t, c) => `<div class="card stat" style="--c:${c}"><div c
 
 function renderSummary() {
   const ys = new Set([new Date().getFullYear()]);
-  active().forEach(r => ys.add(+(r.tarikh || '').slice(0, 4)));
+  active().forEach(r => { const y = +(r.tarikh || '').slice(0, 4); if (y) ys.add(y); });
   $('#yearSel').innerHTML = [...ys].sort((a, b) => b - a)
     .map(y => `<option value="${y}" ${y === state.year ? 'selected' : ''}>${y}</option>`).join('');
 
@@ -310,13 +310,13 @@ function renderSummary() {
   const vs = vehicles();
   const alerts = vs.filter(v => daysLeft(v.tarikhLuput) <= 30);
   $('#alerts').innerHTML = alerts.length
-    ? alerts.map(v => `<button class="item" data-id="${v.id}"><span class="ico" style="--c:#8b5cf6">${svg('car', 18)}</span><div class="grow"><b>${esc(v.plat)}</b><div class="meta">Luput ${v.tarikhLuput}</div></div>${pill(status(v.tarikhLuput))}</button>`).join('')
+    ? alerts.map(v => `<button class="item" data-id="${esc(v.id)}"><span class="ico" style="--c:#8b5cf6">${svg('car', 18)}</span><div class="grow"><b>${esc(v.plat)}</b><div class="meta">Luput ${esc(v.tarikhLuput)}</div></div>${pill(status(v.tarikhLuput))}</button>`).join('')
     : `<div class="card empty">${vs.length ? 'Semua roadtax sah melebihi 30 hari ✨' : 'Tiada kenderaan direkod lagi.'}</div>`;
   updateLastSync();
 }
 
 /* ---------- Bil ---------- */
-const itemHtml = r => `<button class="item" data-id="${r.id}"><span class="ico" style="--c:${colorOf(r.kategori)}">${iconOf(r.kategori)}</span><div class="grow"><b>${esc(label(r.kategori))}</b><div class="meta">${r.tarikh}${r.nota ? ' · ' + esc(r.nota) : ''}</div></div><div class="amt">${fmt(r.jumlah)}</div></button>`;
+const itemHtml = r => `<button class="item" data-id="${esc(r.id)}"><span class="ico" style="--c:${colorOf(r.kategori)}">${iconOf(r.kategori)}</span><div class="grow"><b>${esc(label(r.kategori))}</b><div class="meta">${esc(r.tarikh)}${r.nota ? ' · ' + esc(r.nota) : ''}</div></div><div class="amt">${fmt(r.jumlah)}</div></button>`;
 
 function renderBil() {
   const bk = billKats();
@@ -346,13 +346,13 @@ function renderRt() {
         const s = status(v.tarikhLuput);
         const pct = Math.max(0, Math.min(100, (s.n / 365) * 100));
         const c = s.k === 'bad' ? '#ef4444' : s.k === 'warn' ? '#f59e0b' : '#10b981';
-        return `<button class="item vcard" data-id="${v.id}"><div class="grow"><div class="plat">${esc(v.plat)}</div><div class="meta">Luput ${v.tarikhLuput}</div><div class="prog"><i style="width:${pct}%;background:${c}"></i></div></div>${pill(s)}</button>`;
+        return `<button class="item vcard" data-id="${esc(v.id)}"><div class="grow"><div class="plat">${esc(v.plat)}</div><div class="meta">Luput ${esc(v.tarikhLuput)}</div><div class="prog"><i style="width:${pct}%;background:${c}"></i></div></div>${pill(s)}</button>`;
       }).join('')
     : '<div class="card empty">Tiada kenderaan direkod.</div>';
 
   const hist = active().filter(r => r.kategori === 'Roadtax').sort((a, b) => b.tarikh.localeCompare(a.tarikh));
   $('#rtList').innerHTML = hist.length
-    ? hist.map(r => `<button class="item" data-id="${r.id}"><span class="ico" style="--c:#8b5cf6">${iconOf('Roadtax')}</span><div class="grow"><b>${esc(r.plat)}</b><div class="meta">Bayar ${r.tarikh} · Luput ${r.tarikhLuput}</div></div><div class="amt">${fmt(r.jumlah)}</div></button>`).join('')
+    ? hist.map(r => `<button class="item" data-id="${esc(r.id)}"><span class="ico" style="--c:#8b5cf6">${iconOf('Roadtax')}</span><div class="grow"><b>${esc(r.plat)}</b><div class="meta">Bayar ${esc(r.tarikh)} · Luput ${esc(r.tarikhLuput)}</div></div><div class="amt">${fmt(r.jumlah)}</div></button>`).join('')
     : '<div class="card empty">Tiada rekod.</div>';
 }
 
