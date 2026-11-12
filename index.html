@@ -254,7 +254,9 @@ function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); return 
 let data = load();
 const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbzRT0Y_RmfWFsXF3MmCFXj5gMsK4OhRA0GpDM7tpMSdTiaJ5ELI2gmiiRFcE64ygULj/exec';
 let settings = JSON.parse(localStorage.getItem(SET_KEY) || '{}');
+const DEFAULT_KEY = 'xCSFHhQev6US0P-ZfRw6fv0D';
 if (!settings.url) settings.url = DEFAULT_URL;
+if (!settings.key) settings.key = DEFAULT_KEY;
 const state = { view: 'ringkasan', bilFilter: 'Semua', year: new Date().getFullYear() };
 
 function persist() { localStorage.setItem(KEY, JSON.stringify(data)); }
