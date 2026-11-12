@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Bil & Roadtax">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon.svg">
+<title>Bil & Roadtax</title>
+<style>
+:root{
+  --bg:#f4f5fb;--surface:rgba(255,255,255,.78);--solid:#ffffff;--ink:#0f172a;--muted:#64748b;--line:rgba(15,23,42,.08);
+  --p1:#4f46e5;--p2:#0ea5e9;
+  --shadow:0 12px 32px -14px rgba(15,23,42,.22);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0b1020;--surface:rgba(30,41,59,.72);--solid:#131c31;--ink:#f1f5f9;--muted:#94a3b8;--line:rgba(255,255,255,.08);
+    --p1:#818cf8;--p2:#38bdf8;--shadow:0 12px 32px -14px rgba(0,0,0,.7);
+  }
+  .pill.ok{color:#34d399}.pill.warn{color:#fbbf24}.pill.bad{color:#f87171}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% -10%,rgba(99,102,241,.16),transparent 60%),
+             radial-gradient(800px 480px at 110% 0%,rgba(14,165,233,.14),transparent 55%),var(--bg);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;
+  padding:calc(14px + env(safe-area-inset-top)) 18px 12px;background:color-mix(in srgb,var(--bg) 82%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.hello{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.top h1{margin:2px 0 0;font-size:22px;font-weight:800;letter-spacing:-.02em}
+.syncbtn{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;box-shadow:var(--shadow)}
+.syncbtn:disabled{opacity:.7}
+.syncbtn:disabled svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+main{padding:6px 16px 140px;max-width:620px;margin:0 auto}
+.view{display:none}
+.view.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* Hero */
+.hero{position:relative;overflow:hidden;border-radius:26px;padding:22px;color:#fff;
+  background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 45%,#0ea5e9 100%);box-shadow:0 20px 44px -18px rgba(79,70,229,.7)}
+.hero::after{content:"";position:absolute;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.12);right:-80px;top:-90px}
+.hero::before{content:"";position:absolute;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.08);left:-50px;bottom:-60px}
+.hero-top{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:13px;opacity:.92}
+.hero-amt{position:relative;z-index:1;font-size:38px;font-weight:800;margin-top:12px;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.hero-sub{position:relative;z-index:1;font-size:13px;opacity:.85;margin-top:4px}
+.yr{width:auto!important;padding:7px 12px!important;border-radius:999px!important;border:0!important;background:rgba(255,255,255,.22)!important;color:#fff!important;font-size:13px!important;font-weight:700}
+.yr option{color:#0f172a}
+
+/* Sections & cards */
+.sec{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:24px 4px 10px}
+.card{background:var(--surface);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:20px;padding:16px;box-shadow:var(--shadow)}
+.group{padding:16px}
+.gtitle{font-weight:800;font-size:16px;margin-bottom:2px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat strong{display:block;font-size:20px;margin-top:10px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.sline{display:flex;align-items:center;gap:8px}
+.sline small{font-size:12px;color:var(--muted);font-weight:600}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 18%,transparent)}
+.empty{text-align:center;color:var(--muted);font-size:14px;padding:26px 16px}
+.muted{color:var(--muted);font-size:13px;line-height:1.5}
+.center{text-align:center}
+
+/* List items */
+.item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:13px 14px;margin-bottom:10px;box-shadow:0 1px 2px rgba(15,23,42,.04);cursor:pointer;transition:transform .15s ease}
+.item:active{transform:scale(.98)}
+.ico{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;flex:none;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c)}
+.grow{flex:1;min-width:0}
+.grow b{font-size:15px;font-weight:700}
+.meta{font-size:12px;color:var(--muted);margin-top:3px}
+.amt{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;font-size:15px}
+.pill{font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:rgba(16,185,129,.14);color:#059669}
+.pill.warn{background:rgba(245,158,11,.16);color:#b45309}
+.pill.bad{background:rgba(239,68,68,.14);color:#dc2626}
+.vcard{align-items:center}
+.plat{font-size:17px;font-weight:800;letter-spacing:.04em}
+.prog{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:10px}
+.prog i{display:block;height:100%;border-radius:99px}
+
+/* Chips */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.chip.on{background:var(--ink);color:var(--bg);border-color:transparent}
+
+/* Settings rows */
+.trow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:0}
+.trow .ibtn{margin-left:4px}
+.ibtn{width:36px;height:36px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.ibtn.danger{color:#ef4444}
+.lock{width:36px;height:36px;display:grid;place-items:center;color:var(--muted)}
+
+/* Forms */
+label.lbl{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.06em}
+input,select{width:100%;font:inherit;font-size:16px;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);outline:none}
+input:focus,select:focus{border-color:var(--p1);box-shadow:0 0 0 4px color-mix(in srgb,var(--p1) 18%,transparent)}
+.row{display:flex;gap:12px}
+.row>div{flex:1;min-width:0}
+.btns{display:flex;gap:10px;margin-top:20px}
+.btn{flex:1;padding:14px;border-radius:16px;border:0;font:inherit;font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--p1),var(--p2));cursor:pointer;box-shadow:0 10px 22px -12px var(--p1)}
+.btn.ghost{background:var(--bg);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.btn.danger{background:linear-gradient(135deg,#ef4444,#f97316);box-shadow:0 10px 22px -12px #ef4444}
+
+/* Floating nav, FAB */
+nav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));width:min(420px,calc(100% - 24px));display:flex;gap:4px;padding:6px;border-radius:24px;background:var(--solid);border:1px solid var(--line);box-shadow:var(--shadow);z-index:5}
+nav button{flex:1;border:0;background:none;color:var(--muted);font:inherit;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;border-radius:18px;cursor:pointer}
+nav button.active{color:var(--p1);background:color-mix(in srgb,var(--p1) 13%,transparent)}
+.fab{position:fixed;right:18px;bottom:calc(96px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;border:0;color:#fff;background:linear-gradient(135deg,var(--p1),var(--p2));box-shadow:0 14px 30px -10px var(--p1);display:grid;place-items:center;cursor:pointer;z-index:4}
+.fab:active{transform:scale(.95)}
+
+/* Sheet / modal */
+.modal{position:fixed;inset:0;background:rgba(2,6,23,.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:flex-end;justify-content:center;z-index:10}
+.modal.open{display:flex}
+.sheet{background:var(--solid);width:100%;max-width:560px;border-radius:28px 28px 0 0;padding:10px 20px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto;animation:up .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.grab{width:44px;height:5px;border-radius:9px;background:var(--line);margin:4px auto 14px}
+.sheet h2{margin:0 0 4px;font-size:20px;font-weight:800;letter-spacing:-.01em}
+
+/* Toast */
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom));background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:999px;font-size:14px;font-weight:600;display:none;z-index:20;box-shadow:var(--shadow);max-width:90%;text-align:center}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div>
+    <div class="hello">Rekod bil &amp; roadtax</div>
+    <h1>Bil &amp; Roadtax</h1>
+  </div>
+  <button id="syncBtn" class="syncbtn"><span id="syncIc"></span><span id="syncTxt">Sync</span></button>
+</header>
+
+<main>
+  <section class="view active" id="v-ringkasan">
+    <div class="hero">
+      <div class="hero-top">
+        <span id="heroYear">Jumlah perbelanjaan</span>
+        <select id="yearSel" class="yr" aria-label="Pilih tahun"></select>
+      </div>
+      <div class="hero-amt" id="heroTotal">RM0.00</div>
+      <div class="hero-sub" id="heroCount">0 rekod</div>
+    </div>
+
+    <div class="sec"><span>Mengikut jenis</span></div>
+    <div class="stats" id="statGrid"></div>
+
+    <div class="sec"><span>Perhatian roadtax</span></div>
+    <div id="alerts"></div>
+    <p class="muted center" id="lastSync1" style="margin-top:18px"></p>
+  </section>
+
+  <section class="view" id="v-bil">
+    <div class="chips" id="bilFilter"></div>
+    <div id="bilList"></div>
+  </section>
+
+  <section class="view" id="v-rt">
+    <div class="sec"><span>Status kenderaan</span></div>
+    <div id="rtStatus"></div>
+    <div class="sec"><span>Sejarah bayaran</span></div>
+    <div id="rtList"></div>
+  </section>
+
+  <section class="view" id="v-set">
+    <div class="card group">
+      <div class="gtitle">Google Sheet</div>
+      <p class="muted">Data disimpan dalam telefon dahulu, kemudian disegerakkan bila ada internet.</p>
+      <label class="lbl" for="setUrl">URL Web App</label>
+      <input id="setUrl" placeholder="https://script.google.com/macros/s/.../exec" inputmode="url">
+      <label class="lbl" for="setKey">Kunci API</label>
+      <input id="setKey" placeholder="Sama seperti API_KEY dalam Code.gs">
+      <div class="btns"><button class="btn" id="saveSet">Simpan &amp; Sync</button></div>
+      <p class="muted" id="lastSync2"></p>
+    </div>
+
+    <div class="sec"><span>Jenis bayaran</span></div>
+    <div class="card group" id="typeList"></div>
+
+    <div class="sec"><span>Notifikasi</span></div>
+    <div class="card group">
+      <label class="lbl" for="notifDays">Beri amaran bila tinggal</label>
+      <select id="notifDays">
+        <option value="7">7 hari</option>
+        <option value="14">14 hari</option>
+        <option value="30">30 hari</option>
+      </select>
+      <div class="btns"><button class="btn" id="notifBtn">Aktifkan notifikasi</button></div>
+      <p class="muted" id="notifState"></p>
+    </div>
+
+    <div class="sec"><span>Data</span></div>
+    <div class="card group">
+      <button class="btn ghost" id="exportBtn" style="width:100%">Eksport backup (JSON)</button>
+    </div>
+  </section>
+</main>
+
+<nav id="nav"></nav>
+<button class="fab" id="addBtn" aria-label="Tambah rekod"></button>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY = 'bilTracker.v1', SET_KEY = 'bilTracker.settings', NOTIF_KEY = 'bilTracker.notif';
+const DEFAULT_KAT = ['Air', 'Api', 'Roadtax'];
+const NAMES = { Air: 'Bil Air', Api: 'Bil Api (Elektrik)', Roadtax: 'Roadtax' };
+const PAL = ['#ec4899', '#14b8a6', '#6366f1', '#f43f5e', '#84cc16', '#06b6d4'];
+
+/* ---------- Ikon (SVG garis) ---------- */
+const P = {
+  home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  receipt: '<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9.5 8h5M9.5 12h5"/>',
+  car: '<path d="M4 16v-4l2-5h12l2 5v4"/><path d="M3 16h18v3H3z"/><circle cx="7.5" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/>',
+  sliders: '<path d="M4 6h9M17 6h3M4 18h3M11 18h9"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="18" r="2"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  sync: '<path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  trash: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  drop: '<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>',
+  bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>'
+};
+const svg = (k, s = 20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[k]}</svg>`;
+const iconOf = k => svg(k === 'Air' ? 'drop' : k === 'Api' ? 'bolt' : k === 'Roadtax' ? 'car' : 'receipt', 18);
+
+/* ---------- Utiliti ---------- */
+const $ = s => document.querySelector(s);
+const p2 = n => String(n).padStart(2, '0');
+const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()); };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const fmt = n => 'RM' + (Number(n) || 0).toLocaleString('ms-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const normDate = v => v ? String(v).slice(0, 10) : '';
+const label = k => NAMES[k] || k;
+const colorOf = k => NAMES[k] ? ({ Air: '#0ea5e9', Api: '#f59e0b', Roadtax: '#8b5cf6' })[k] : PAL[[...k].reduce((a, c) => a + c.charCodeAt(0), 0) % PAL.length];
+const active = () => data.filter(r => !r.deleted);
+const kats = () => { const s = new Set(DEFAULT_KAT); active().forEach(r => r.kategori && s.add(r.kategori)); return [...s]; };
+const billKats = () => kats().filter(k => k !== 'Roadtax');
+
+function load() { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; } }
+let data = load();
+let settings = JSON.parse(localStorage.getItem(SET_KEY) || '{}');
+const state = { view: 'ringkasan', bilFilter: 'Semua', year: new Date().getFullYear() };
+
+function persist() { localStorage.setItem(KEY, JSON.stringify(data)); }
+function save() { persist(); scheduleSync(); }
+
+function daysLeft(ds) {
+  const [y, m, d] = ds.split('-').map(Number);
+  const t = new Date(y, m - 1, d);
+  const n = new Date(); n.setHours(0, 0, 0, 0);
+  return Math.round((t - n) / 864e5);
+}
+function status(ds) {
+  const n = daysLeft(ds);
+  if (n < 0) return { k: 'bad', t: `Luput ${-n} hari lalu`, n };
+  if (n === 0) return { k: 'warn', t: 'Luput hari ini', n };
+  if (n <= 30) return { k: 'warn', t: `Luput dalam ${n} hari`, n };
+  return { k: 'ok', t: `Sah ${n} hari lagi`, n };
+}
+const pill = s => `<span class="pill ${s.k}">${s.t}</span>`;
+function monthLabel(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  return new Date(y, m - 1, 1).toLocaleDateString('ms-MY', { month: 'long', year: 'numeric' });
+}
+function vehicles() {
+  const m = {};
+  active().filter(r => r.kategori === 'Roadtax').forEach(r => {
+    const k = r.plat.toUpperCase();
+    if (!m[k] || r.tarikhLuput > m[k].tarikhLuput) m[k] = r;
+  });
+  return Object.values(m).sort((a, b) => a.tarikhLuput.localeCompare(b.tarikhLuput));
+}
+
+/* ---------- Ringkasan ---------- */
+const statCard = (name, t, c) => `<div class="card stat" style="--c:${c}"><div class="sline"><span class="dot"></span><small>${esc(name)}</small></div><strong>${fmt(t)}</strong></div>`;
+
+function renderSummary() {
+  const ys = new Set([new Date().getFullYear()]);
+  active().forEach(r => ys.add(+(r.tarikh || '').slice(0, 4)));
+  $('#yearSel').innerHTML = [...ys].sort((a, b) => b - a)
+    .map(y => `<option value="${y}" ${y === state.year ? 'selected' : ''}>${y}</option>`).join('');
+
+  const inYear = r => (r.tarikh || '').startsWith(String(state.year));
+  const sum = k => active().filter(r => r.kategori === k && inYear(r)).reduce((a, r) => a + Number(r.jumlah || 0), 0);
+  let total = 0;
+  const cards = billKats().map(k => { const t = sum(k); total += t; return statCard(label(k), t, colorOf(k)); });
+  const rt = sum('Roadtax'); total += rt;
+  cards.push(statCard('Roadtax', rt, colorOf('Roadtax')));
+  $('#statGrid').innerHTML = cards.join('');
+
+  $('#heroTotal').textContent = fmt(total);
+  $('#heroYear').textContent = `Jumlah perbelanjaan ${state.year}`;
+  const cnt = active().filter(inYear).length;
+  $('#heroCount').textContent = `${cnt} rekod`;
+
+  const vs = vehicles();
+  const alerts = vs.filter(v => daysLeft(v.tarikhLuput) <= 30);
+  $('#alerts').innerHTML = alerts.length
+    ? alerts.map(v => `<button class="item" data-id="${v.id}"><span class="ico" style="--c:#8b5cf6">${svg('car', 18)}</span><div class="grow"><b>${esc(v.plat)}</b><div class="meta">Luput ${v.tarikhLuput}</div></div>${pill(status(v.tarikhLuput))}</button>`).join('')
+    : `<div class="card empty">${vs.length ? 'Semua roadtax sah melebihi 30 hari ✨' : 'Tiada kenderaan direkod lagi.'}</div>`;
+  updateLastSync();
+}
+
+/* ---------- Bil ---------- */
+const itemHtml = r => `<button class="item" data-id="${r.id}"><span class="ico" style="--c:${colorOf(r.kategori)}">${iconOf(r.kategori)}</span><div class="grow"><b>${esc(label(r.kategori))}</b><div class="meta">${r.tarikh}${r.nota ? ' · ' + esc(r.nota) : ''}</div></div><div class="amt">${fmt(r.jumlah)}</div></button>`;
+
+function renderBil() {
+  const bk = billKats();
+  if (state.bilFilter !== 'Semua' && !bk.includes(state.bilFilter)) state.bilFilter = 'Semua';
+  $('#bilFilter').innerHTML = ['Semua', ...bk].map(f =>
+    `<button class="chip ${state.bilFilter === f ? 'on' : ''}" data-f="${esc(f)}">${f === 'Semua' ? 'Semua' : esc(label(f))}</button>`).join('');
+
+  const list = active()
+    .filter(r => r.kategori !== 'Roadtax' && (state.bilFilter === 'Semua' || r.kategori === state.bilFilter))
+    .sort((a, b) => b.tarikh.localeCompare(a.tarikh));
+  if (!list.length) { $('#bilList').innerHTML = '<div class="card empty">Tiada rekod bil lagi.<br>Tekan + untuk tambah.</div>'; return; }
+
+  const groups = {};
+  list.forEach(r => { const m = r.tarikh.slice(0, 7); (groups[m] = groups[m] || []).push(r); });
+  $('#bilList').innerHTML = Object.keys(groups).map(m => {
+    const g = groups[m];
+    const tot = g.reduce((a, r) => a + Number(r.jumlah || 0), 0);
+    return `<div class="sec"><span>${monthLabel(m)}</span><span>${fmt(tot)}</span></div>` + g.map(itemHtml).join('');
+  }).join('');
+}
+
+/* ---------- Roadtax ---------- */
+function renderRt() {
+  const vs = vehicles();
+  $('#rtStatus').innerHTML = vs.length
+    ? vs.map(v => {
+        const s = status(v.tarikhLuput);
+        const pct = Math.max(0, Math.min(100, (s.n / 365) * 100));
+        const c = s.k === 'bad' ? '#ef4444' : s.k === 'warn' ? '#f59e0b' : '#10b981';
+        return `<button class="item vcard" data-id="${v.id}"><div class="grow"><div class="plat">${esc(v.plat)}</div><div class="meta">Luput ${v.tarikhLuput}</div><div class="prog"><i style="width:${pct}%;background:${c}"></i></div></div>${pill(s)}</button>`;
+      }).join('')
+    : '<div class="card empty">Tiada kenderaan direkod.</div>';
+
+  const hist = active().filter(r => r.kategori === 'Roadtax').sort((a, b) => b.tarikh.localeCompare(a.tarikh));
+  $('#rtList').innerHTML = hist.length
+    ? hist.map(r => `<button class="item" data-id="${r.id}"><span class="ico" style="--c:#8b5cf6">${iconOf('Roadtax')}</span><div class="grow"><b>${esc(r.plat)}</b><div class="meta">Bayar ${r.tarikh} · Luput ${r.tarikhLuput}</div></div><div class="amt">${fmt(r.jumlah)}</div></button>`).join('')
+    : '<div class="card empty">Tiada rekod.</div>';
+}
+
+/* ---------- Tetapan: urus jenis ---------- */
+function renderTypes() {
+  $('#typeList').innerHTML = kats().map(k => {
+    const n = active().filter(r => r.kategori === k).length;
+    const actions = k === 'Roadtax'
+      ? `<span class="lock" title="Dikunci">${svg('lock', 16)}</span>`
+      : `<button class="ibtn" data-ren="${esc(k)}" aria-label="Tukar nama">${svg('edit', 16)}</button><button class="ibtn danger" data-del="${esc(k)}" aria-label="Padam jenis">${svg('trash', 16)}</button>`;
+    return `<div class="trow"><span class="ico" style="--c:${colorOf(k)}">${iconOf(k)}</span><div class="grow"><b>${esc(label(k))}</b><div class="meta">${n} rekod</div></div>${actions}</div>`;
+  }).join('');
+}
+
+/* ---------- Sheet helpers ---------- */
+function openSheet(html) {
+  $('#sheet').innerHTML = `<div class="grab"></div>${html}`;
+  $('#modal').classList.add('open');
+}
+function closeModal() { $('#modal').classList.remove('open'); }
+
+function askConfirm(title, msg, okText, onOk) {
+  openSheet(`<h2>${esc(title)}</h2><p class="muted">${esc(msg)}</p>
+    <div class="btns"><button class="btn ghost" id="cNo">Batal</button><button class="btn danger" id="cYes">${esc(okText)}</button></div>`);
+  $('#cNo').onclick = closeModal;
+  $('#cYes').onclick = () => { closeModal(); onOk(); };
+}
+
+function openRename(kat) {
+  if (kat === 'Roadtax') return;
+  openSheet(`<h2>Tukar nama jenis</h2>
+    <p class="muted">Semua rekod "${esc(label(kat))}" akan guna nama baru.</p>
+    <form id="renFrm">
+      <label class="lbl" for="renInp">Nama baru</label>
+      <input id="renInp" value="${esc(kat)}" maxlength="30" required>
+      <div class="btns"><button type="button" class="btn ghost" id="cNo">Batal</button><button class="btn" type="submit">Simpan</button></div>
+    </form>`);
+  $('#cNo').onclick = closeModal;
+  $('#renFrm').onsubmit = e => {
+    e.preventDefault();
+    const nama = $('#renInp').value.trim();
+    if (!nama) { toast('Nama tidak boleh kosong'); return; }
+    // Jika nama sama dengan jenis lain (beza huruf besar/kecil), gabungkan ke jenis itu
+    const other = kats().find(k => k !== kat && k.toLowerCase() === nama.toLowerCase());
+    const target = other || nama;
+    if (target === kat) { closeModal(); return; }
+    const now = Date.now();
+    data.forEach(r => { if (r.kategori === kat && !r.deleted) { r.kategori = target; r.updatedAt = now; } });
+    save(); closeModal(); render(); toast('Nama jenis dikemas kini');
+  };
+}
+
+function openDeleteType(kat) {
+  if (kat === 'Roadtax') return;
+  const n = active().filter(r => r.kategori === kat).length;
+  askConfirm(`Padam jenis "${label(kat)}"?`,
+    `${n} rekod dalam jenis ini akan dipadam dan turut diselaraskan ke Google Sheet.`, 'Padam jenis', () => {
+      const now = Date.now();
+      data.forEach(r => { if (r.kategori === kat && !r.deleted) { r.deleted = true; r.updatedAt = now; } });
+      save(); render(); toast('Jenis dipadam');
+    });
+}
+
+/* ---------- Borang rekod ---------- */
+function openForm(id) {
+  const r = id ? (data.find(x => x.id === id) || {}) : {};
+  const kat = r.kategori || (state.view === 'rt' ? 'Roadtax' : 'Air');
+  renderForm(kat, r);
+}
+
+function renderForm(kat, r) {
+  const isNew = !r.id;
+  openSheet(`
+    <h2>${isNew ? 'Tambah rekod' : 'Kemaskini rekod'}</h2>
+    <p class="muted">${isNew ? 'Rekod bil, roadtax atau bayaran lain.' : 'Ubah maklumat atau padam rekod ini.'}</p>
+    <form id="frm">
+      <label class="lbl" for="fKat">Jenis bayaran</label>
+      <select name="kategori" id="fKat">
+        ${kats().map(k => `<option value="${esc(k)}" ${k === kat ? 'selected' : ''}>${esc(label(k))}</option>`).join('')}
+        <option value="__new__">+ Jenis baru…</option>
+      </select>
+      <div id="newKatWrap" style="display:none">
+        <label class="lbl" for="fKatNew">Nama jenis baru</label>
+        <input id="fKatNew" name="katBaru" list="katList" placeholder="contoh: Internet, Telefon, Insurans" maxlength="30">
+        <datalist id="katList">
+          <option>Internet</option><option>Telefon</option><option>Sewa</option>
+          <option>Cukai Pintu</option><option>Insurans Kereta</option><option>Yuran Sekolah</option>
+        </datalist>
+      </div>
+      <div class="row">
+        <div><label class="lbl" for="fTarikh">Tarikh</label><input id="fTarikh" type="date" name="tarikh" required value="${r.tarikh || todayStr()}"></div>
+        <div><label class="lbl" for="fJumlah">Jumlah (RM)</label><input id="fJumlah" type="number" step="0.01" min="0" name="jumlah" required inputmode="decimal" placeholder="0.00" value="${r.jumlah ?? ''}"></div>
+      </div>
+      <div id="rtFields" style="display:${kat === 'Roadtax' ? 'block' : 'none'}">
+        <label class="lbl" for="fPlat">No. plat</label>
+        <input id="fPlat" name="plat" value="${esc(r.plat || '')}" placeholder="contoh: WXX1234" autocapitalize="characters">
+        <label class="lbl" for="fLuput">Tarikh luput</label>
+        <input id="fLuput" type="date" name="tarikhLuput" value="${r.tarikhLuput || ''}">
+      </div>
+      <label class="lbl" for="fNota">Nota (pilihan)</label>
+      <input id="fNota" name="nota" value="${esc(r.nota || '')}" maxlength="80">
+      <div class="btns">
+        ${isNew ? '' : '<button type="button" class="btn danger" id="delBtn">Padam</button>'}
+        <button type="button" class="btn ghost" id="cancelBtn">Batal</button>
+        <button class="btn" type="submit">Simpan</button>
+      </div>
+    </form>`);
+
+  $('#fKat').onchange = e => {
+    const v = e.target.value;
+    $('#rtFields').style.display = v === 'Roadtax' ? 'block' : 'none';
+    $('#newKatWrap').style.display = v === '__new__' ? 'block' : 'none';
+  };
+  $('#cancelBtn').onclick = closeModal;
+  const del = $('#delBtn');
+  if (del) del.onclick = () => askConfirm('Padam rekod?', 'Rekod ini akan dipadam dan diselaraskan ke Google Sheet.', 'Padam', () => {
+    const rec = data.find(x => x.id === r.id);
+    if (rec) { rec.deleted = true; rec.updatedAt = Date.now(); }
+    save(); render(); toast('Rekod dipadam');
+  });
+
+  $('#frm').onsubmit = e => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    let kategori = f.get('kategori');
+    if (kategori === '__new__') {
+      const nama = (f.get('katBaru') || '').trim();
+      if (!nama) { toast('Taip nama jenis baru'); return; }
+      kategori = kats().find(k => k.toLowerCase() === nama.toLowerCase()) || nama;
+    }
+    const rec = {
+      id: r.id || uid(), kategori,
+      tarikh: f.get('tarikh'),
+      tarikhLuput: '', plat: '',
+      jumlah: Math.round(parseFloat(f.get('jumlah')) * 100) / 100,
+      nota: (f.get('nota') || '').trim(),
+      updatedAt: Date.now(), deleted: false
+    };
+    if (!(rec.jumlah >= 0)) { toast('Jumlah tidak sah'); return; }
+    if (kategori === 'Roadtax') {
+      rec.plat = (f.get('plat') || '').trim().toUpperCase();
+      rec.tarikhLuput = f.get('tarikhLuput') || '';
+      if (!rec.plat || !rec.tarikhLuput) { toast('Lengkapkan no. plat dan tarikh luput'); return; }
+    }
+    const i = data.findIndex(x => x.id === rec.id);
+    if (i >= 0) data[i] = rec; else data.push(rec);
+    save(); closeModal(); render(); toast('Disimpan');
+  };
+}
+
+/* ---------- Notifikasi roadtax ---------- */
+function notifCfg() {
+  try { return Object.assign({ days: 30, last: '' }, JSON.parse(localStorage.getItem(NOTIF_KEY))); }
+  catch (e) { return { days: 30, last: '' }; }
+}
+function notifSave(c) { localStorage.setItem(NOTIF_KEY, JSON.stringify(c)); }
+function notifSupported() { return 'Notification' in window; }
+function updateNotifUI() {
+  const b = $('#notifBtn'), s = $('#notifState');
+  $('#notifDays').value = String(notifCfg().days);
+  if (!notifSupported()) { b.disabled = true; s.textContent = 'Pelayar ini tidak menyokong notifikasi.'; return; }
+  if (Notification.permission === 'granted') {
+    b.textContent = 'Notifikasi aktif ✅'; b.disabled = true;
+    s.textContent = 'Amaran dihantar sekali sehari bila app dibuka.';
+  } else if (Notification.permission === 'denied') {
+    b.disabled = true; s.textContent = 'Notifikasi disekat. Benarkan dalam tetapan pelayar.';
+  } else {
+    b.textContent = 'Aktifkan notifikasi'; b.disabled = false; s.textContent = '';
+  }
+}
+async function enableNotif() {
+  if (!notifSupported()) return;
+  try {
+    const p = await Notification.requestPermission();
+    updateNotifUI();
+    if (p === 'granted') { toast('Notifikasi diaktifkan'); checkRoadtaxNotif(true); }
+  } catch (e) { toast('Tidak dapat mengaktifkan notifikasi'); }
+}
+function showNotif(title, body, tag) {
+  const opts = { body, tag, icon: 'icon.svg' };
+  try {
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready.then(reg => reg.showNotification(title, opts));
+    } else {
+      new Notification(title, opts);
+    }
+  } catch (e) { /* pelayar tidak benarkan notifikasi */ }
+}
+function checkRoadtaxNotif(force) {
+  if (!notifSupported() || Notification.permission !== 'granted') return;
+  const cfg = notifCfg();
+  const today = todayStr();
+  if (!force && cfg.last === today) return;
+  const alerts = vehicles().map(v => ({ v, n: daysLeft(v.tarikhLuput) })).filter(x => x.n <= cfg.days);
+  cfg.last = today; notifSave(cfg);
+  if (!alerts.length) return;
+  const expired = alerts.filter(x => x.n < 0).length;
+  const lines = alerts.slice(0, 5).map(({ v, n }) =>
+    `${v.plat}: ${n < 0 ? 'luput ' + (-n) + ' hari lalu' : n === 0 ? 'luput hari ini' : 'luput dalam ' + n + ' hari'}`);
+  showNotif(expired ? `⚠️ ${expired} roadtax telah luput` : '🚗 Roadtax hampir luput', lines.join('\n'), 'roadtax-' + today);
+}
+
+/* ---------- Sync dengan Google Sheet ---------- */
+let syncTimer;
+function scheduleSync() { clearTimeout(syncTimer); syncTimer = setTimeout(() => sync(false), 1500); }
+
+function merge(remote) {
+  const map = new Map(data.map(r => [String(r.id), r]));
+  (remote || []).forEach(r => {
+    const rec = {
+      ...r,
+      id: String(r.id),
+      kategori: r.kategori || '',
+      tarikh: normDate(r.tarikh),
+      tarikhLuput: normDate(r.tarikhLuput),
+      plat: r.plat || '',
+      jumlah: Number(r.jumlah) || 0,
+      nota: r.nota || '',
+      updatedAt: Number(r.updatedAt) || 0,
+      deleted: r.deleted === true || String(r.deleted).toUpperCase() === 'TRUE'
+    };
+    const cur = map.get(rec.id);
+    if (!cur || rec.updatedAt > cur.updatedAt) map.set(rec.id, rec);
+  });
+  data = [...map.values()];
+  persist();
+}
+
+async function sync(manual) {
+  if (!settings.url) { if (manual) { toast('Masukkan URL Web App dahulu'); go('set'); } return; }
+  if (!navigator.onLine) { if (manual) toast('Tiada internet. Data kekal dalam telefon.'); return; }
+  const btn = $('#syncBtn'), txt = $('#syncTxt');
+  btn.disabled = true; txt.textContent = 'Sync…';
+  try {
+    const res = await fetch(settings.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ key: settings.key || '', records: data })
+    });
+    const j = await res.json();
+    if (!j.ok) throw new Error(j.error || 'Ralat pelayan');
+    merge(j.records);
+    settings.lastSync = new Date().toISOString();
+    localStorage.setItem(SET_KEY, JSON.stringify(settings));
+    render();
+    checkRoadtaxNotif(false);
+    if (manual) toast('Berjaya disegerakkan ✅');
+  } catch (err) {
+    if (manual) toast('Sync gagal: ' + err.message);
+  } finally {
+    btn.disabled = false; txt.textContent = 'Sync';
+    updateLastSync();
+  }
+}
+
+function updateLastSync() {
+  const t = settings.lastSync ? 'Sync terakhir: ' + new Date(settings.lastSync).toLocaleString('ms-MY') : 'Belum disegerakkan';
+  $('#lastSync1').textContent = t;
+  $('#lastSync2').textContent = t;
+}
+
+/* ---------- Navigasi & paparan ---------- */
+function render() {
+  if (state.view === 'ringkasan') renderSummary();
+  if (state.view === 'bil') renderBil();
+  if (state.view === 'rt') renderRt();
+  if (state.view === 'set') renderTypes();
+}
+
+const NAV = [['ringkasan', 'Ringkasan', 'home'], ['bil', 'Bil', 'receipt'], ['rt', 'Roadtax', 'car'], ['set', 'Tetapan', 'sliders']];
+
+function go(v) {
+  state.view = v;
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('active', b.dataset.v === v));
+  document.querySelectorAll('.view').forEach(s => s.classList.toggle('active', s.id === 'v-' + v));
+  $('#addBtn').style.display = v === 'set' ? 'none' : 'grid';
+  if (v === 'set') {
+    $('#setUrl').value = settings.url || '';
+    $('#setKey').value = settings.key || '';
+    updateNotifUI();
+  }
+  render();
+  window.scrollTo(0, 0);
+}
+
+function exportBackup() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'bil-roadtax-' + todayStr() + '.json';
+  a.click();
+}
+
+let toastTimer;
+function toast(m) {
+  const t = $('#toast');
+  t.textContent = m; t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.style.display = 'none', 2200);
+}
+
+/* ---------- Event ---------- */
+$('#nav').innerHTML = NAV.map(([v, t, ic]) => `<button data-v="${v}">${svg(ic, 22)}<span>${t}</span></button>`).join('');
+$('#nav').onclick = e => { const b = e.target.closest('[data-v]'); if (b) go(b.dataset.v); };
+$('#addBtn').innerHTML = svg('plus', 26);
+$('#addBtn').onclick = () => openForm(null);
+$('#syncIc').innerHTML = svg('sync', 16);
+$('#syncBtn').onclick = () => sync(true);
+$('#yearSel').onchange = e => { state.year = +e.target.value; renderSummary(); };
+$('#saveSet').onclick = () => {
+  settings.url = $('#setUrl').value.trim();
+  settings.key = $('#setKey').value.trim();
+  localStorage.setItem(SET_KEY, JSON.stringify(settings));
+  sync(true);
+};
+$('#notifBtn').onclick = enableNotif;
+$('#notifDays').onchange = e => {
+  const c = notifCfg(); c.days = +e.target.value; c.last = ''; notifSave(c);
+  toast('Tetapan amaran disimpan'); checkRoadtaxNotif(false);
+};
+$('#exportBtn').onclick = exportBackup;
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+
+document.addEventListener('click', e => {
+  const chip = e.target.closest('[data-f]');
+  if (chip) { state.bilFilter = chip.dataset.f; renderBil(); return; }
+  const ren = e.target.closest('[data-ren]');
+  if (ren) { openRename(ren.dataset.ren); return; }
+  const del = e.target.closest('[data-del]');
+  if (del) { openDeleteType(del.dataset.del); return; }
+  const item = e.target.closest('[data-id]');
+  if (item) openForm(item.dataset.id);
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkRoadtaxNotif(false); });
+window.addEventListener('online', () => sync(false));
+
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+go('ringkasan');
+updateNotifUI();
+checkRoadtaxNotif(false);
+sync(false);
+</script>
+</body>
+</html>
