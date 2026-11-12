@@ -252,7 +252,9 @@ const billKats = () => kats().filter(k => k !== 'Roadtax');
 
 function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); return Array.isArray(d) ? d.filter(r => r && r.id != null && typeof r.tarikh === 'string' && r.tarikh) : []; } catch (e) { return []; } }
 let data = load();
+const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbzRT0Y_RmfWFsXF3MmCFXj5gMsK4OhRA0GpDM7tpMSdTiaJ5ELI2gmiiRFcE64ygULj/exec';
 let settings = JSON.parse(localStorage.getItem(SET_KEY) || '{}');
+if (!settings.url) settings.url = DEFAULT_URL;
 const state = { view: 'ringkasan', bilFilter: 'Semua', year: new Date().getFullYear() };
 
 function persist() { localStorage.setItem(KEY, JSON.stringify(data)); }
