@@ -14,7 +14,10 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://github.com/ashrafkrai-coder/bil-roadtax)",
       "Bash(sed -i \"s|^if \\(!settings.url\\) settings.url = DEFAULT_URL;|const DEFAULT_KEY = 'xCSFHhQev6US0P-ZfRw6fv0D';\\\\nif \\(!settings.url\\) settings.url = DEFAULT_URL;\\\\nif \\(!settings.key\\) settings.key = DEFAULT_KEY;|\" index.html)",
       "Bash(git commit -q -m 'Set default sync API key *)",
-      "Bash(git commit -q -m 'Add Google Apps Script backend \\(Code.gs\\) *)"
+      "Bash(git commit -q -m 'Add Google Apps Script backend \\(Code.gs\\) *)",
+      "Bash(node -e ' *)",
+      "Bash(node C:/Users/SMKTAMANMEDANPERANTI/.claude/skills/browser-automation/browser.mjs \"file:///C:/Users/SMKTAMANMEDANPERANTI/Documents/GitHub/bil-roadtax/index.html\")",
+      "Bash(git commit -q -m 'Add per-bill payment links *)"
     ]
   }
 }
