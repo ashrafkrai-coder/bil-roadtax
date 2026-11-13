@@ -69,6 +69,8 @@ main{padding:6px 16px 140px;max-width:620px;margin:0 auto}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 0 4px color-mix(in srgb,var(--c) 18%,transparent)}
 .empty{text-align:center;color:var(--muted);font-size:14px;padding:26px 16px}
 .muted{color:var(--muted);font-size:13px;line-height:1.5}
+.pay{display:inline-block;margin-top:10px;padding:6px 12px;border-radius:999px;background:linear-gradient(135deg,var(--p1),var(--p2));color:#fff;font-size:12px;font-weight:700;text-decoration:none}
+.pay:active{opacity:.8}
 .center{text-align:center}
 
 /* List items */
@@ -229,6 +231,7 @@ const P = {
   sync: '<path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/>',
   edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>',
   trash: '<path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>',
   lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   drop: '<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>',
   bolt: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>'
@@ -257,6 +260,12 @@ let settings = JSON.parse(localStorage.getItem(SET_KEY) || '{}');
 const DEFAULT_KEY = 'xCSFHhQev6US0P-ZfRw6fv0D';
 if (!settings.url) settings.url = DEFAULT_URL;
 if (!settings.key) settings.key = DEFAULT_KEY;
+// Pautan bayar lalai (boleh diubah di Tetapan > Jenis bayaran)
+const DEFAULT_LINKS = { Air: 'https://www.airselangor.com/', Api: 'https://www.mytnb.com.my/', Roadtax: 'https://www.jpj.gov.my/' };
+const payUrl = k => {
+  const u = ((settings.links || {})[k] ?? DEFAULT_LINKS[k] ?? '').trim();
+  return /^https?:\/\//i.test(u) ? u : '';
+};
 const state = { view: 'ringkasan', bilFilter: 'Semua', year: new Date().getFullYear() };
 
 function persist() { localStorage.setItem(KEY, JSON.stringify(data)); }
@@ -290,7 +299,8 @@ function vehicles() {
 }
 
 /* ---------- Ringkasan ---------- */
-const statCard = (name, t, c) => `<div class="card stat" style="--c:${c}"><div class="sline"><span class="dot"></span><small>${esc(name)}</small></div><strong>${fmt(t)}</strong></div>`;
+const payBtn = k => { const u = payUrl(k); return u ? `<a class="pay" href="${esc(u)}" target="_blank" rel="noopener noreferrer">Bayar ↗</a>` : ''; };
+const statCard = (k, name, t, c) => `<div class="card stat" style="--c:${c}"><div class="sline"><span class="dot"></span><small>${esc(name)}</small></div><strong>${fmt(t)}</strong>${payBtn(k)}</div>`;
 
 function renderSummary() {
   const ys = new Set([new Date().getFullYear()]);
@@ -301,9 +311,9 @@ function renderSummary() {
   const inYear = r => (r.tarikh || '').startsWith(String(state.year));
   const sum = k => active().filter(r => r.kategori === k && inYear(r)).reduce((a, r) => a + Number(r.jumlah || 0), 0);
   let total = 0;
-  const cards = billKats().map(k => { const t = sum(k); total += t; return statCard(label(k), t, colorOf(k)); });
+  const cards = billKats().map(k => { const t = sum(k); total += t; return statCard(k, label(k), t, colorOf(k)); });
   const rt = sum('Roadtax'); total += rt;
-  cards.push(statCard('Roadtax', rt, colorOf('Roadtax')));
+  cards.push(statCard('Roadtax', 'Roadtax', rt, colorOf('Roadtax')));
   $('#statGrid').innerHTML = cards.join('');
 
   $('#heroTotal').textContent = fmt(total);
@@ -365,8 +375,8 @@ function renderTypes() {
   $('#typeList').innerHTML = kats().map(k => {
     const n = active().filter(r => r.kategori === k).length;
     const actions = k === 'Roadtax'
-      ? `<span class="lock" title="Dikunci">${svg('lock', 16)}</span>`
-      : `<button class="ibtn" data-ren="${esc(k)}" aria-label="Tukar nama">${svg('edit', 16)}</button><button class="ibtn danger" data-del="${esc(k)}" aria-label="Padam jenis">${svg('trash', 16)}</button>`;
+      ? `<button class="ibtn" data-link="${esc(k)}" aria-label="Pautan bayar">${svg('link', 16)}</button><span class="lock" title="Dikunci">${svg('lock', 16)}</span>`
+      : `<button class="ibtn" data-link="${esc(k)}" aria-label="Pautan bayar">${svg('link', 16)}</button><button class="ibtn" data-ren="${esc(k)}" aria-label="Tukar nama">${svg('edit', 16)}</button><button class="ibtn danger" data-del="${esc(k)}" aria-label="Padam jenis">${svg('trash', 16)}</button>`;
     return `<div class="trow"><span class="ico" style="--c:${colorOf(k)}">${iconOf(k)}</span><div class="grow"><b>${esc(label(k))}</b><div class="meta">${n} rekod</div></div>${actions}</div>`;
   }).join('');
 }
@@ -406,6 +416,25 @@ function openRename(kat) {
     const now = Date.now();
     data.forEach(r => { if (r.kategori === kat && !r.deleted) { r.kategori = target; r.updatedAt = now; } });
     save(); closeModal(); render(); toast('Nama jenis dikemas kini');
+  };
+}
+
+function openLink(kat) {
+  openSheet(`<h2>Pautan bayar</h2>
+    <p class="muted">Pautan laman web untuk bayar "${esc(label(kat))}". Kosongkan untuk buang butang Bayar.</p>
+    <form id="lnkFrm">
+      <label class="lbl" for="lnkInp">URL (https://...)</label>
+      <input id="lnkInp" type="url" inputmode="url" value="${esc(payUrl(kat))}" placeholder="https://">
+      <div class="btns"><button type="button" class="btn ghost" id="cNo">Batal</button><button class="btn" type="submit">Simpan</button></div>
+    </form>`);
+  $('#cNo').onclick = closeModal;
+  $('#lnkFrm').onsubmit = e => {
+    e.preventDefault();
+    const u = $('#lnkInp').value.trim();
+    if (u && !/^https?:\/\//i.test(u)) { toast('URL mesti bermula dengan https://'); return; }
+    settings.links = Object.assign({}, settings.links, { [kat]: u });
+    localStorage.setItem(SET_KEY, JSON.stringify(settings));
+    closeModal(); render(); toast('Pautan disimpan');
   };
 }
 
@@ -685,6 +714,8 @@ document.addEventListener('click', e => {
   if (chip) { state.bilFilter = chip.dataset.f; renderBil(); return; }
   const ren = e.target.closest('[data-ren]');
   if (ren) { openRename(ren.dataset.ren); return; }
+  const lnk = e.target.closest('[data-link]');
+  if (lnk) { openLink(lnk.dataset.link); return; }
   const del = e.target.closest('[data-del]');
   if (del) { openDeleteType(del.dataset.del); return; }
   const item = e.target.closest('[data-id]');
