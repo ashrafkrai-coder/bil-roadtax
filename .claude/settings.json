@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__claude_ai_Vercel__get_deployment",
+      "PowerShell(Get-ChildItem -Path \"$HOME\\\\Documents\",\"$HOME\\\\Downloads\",\"$HOME\\\\Desktop\" -Recurse -Depth 3 -Include manifest.json,manifest.webmanifest,sw.js,service-worker.js -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName; Get-ChildItem \"$HOME\\\\Documents\\\\GitHub\" -Directory | Select-Object Name)",
+      "mcp__claude_ai_Vercel__list_deployment_files",
+      "mcp__claude_ai_Vercel__get_deployment_file_contents",
+      "Bash(cd /tmp)",
+      "Bash(node C:/Users/SMKTAMANMEDANPERANTI/.claude/skills/browser-automation/browser.mjs https://bil-roadtax.vercel.app/ --snapshot --screenshot C:/Users/SMKTAM~1/AppData/Local/Temp/claude/dc2ebe8f351ce751/a9d362f8-c9e6-4a86-bd31-60d31a18e35c/scratchpad/home.png)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m 'Harden rendering of synced data and ignore invalid records *)",
+      "Bash(git push *)",
+      "Bash(git commit -q -m 'Set default Google Apps Script sync URL *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" https://github.com/ashrafkrai-coder/bil-roadtax)",
+      "Bash(sed -i \"s|^if \\(!settings.url\\) settings.url = DEFAULT_URL;|const DEFAULT_KEY = 'xCSFHhQev6US0P-ZfRw6fv0D';\\\\nif \\(!settings.url\\) settings.url = DEFAULT_URL;\\\\nif \\(!settings.key\\) settings.key = DEFAULT_KEY;|\" index.html)",
+      "Bash(git commit -q -m 'Set default sync API key *)",
+      "Bash(git commit -q -m 'Add Google Apps Script backend \\(Code.gs\\) *)"
+    ]
+  }
+}
